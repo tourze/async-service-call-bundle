@@ -15,9 +15,11 @@
     "symfony/framework-bundle": "^6.4",
     "symfony/http-kernel": "^6.4",
     "symfony/messenger": "^6.4",
+    "symfony/property-info": "^6.4",
     "symfony/serializer": "^6.4",
     "symfony/yaml": "^6.4 || ^7.1",
-    "tourze/async-contracts": "0.0.*"
+    "tourze/async-contracts": "0.0.*",
+    "tourze/doctrine-helper": "0.0.*"
   },
   "require-dev": {
     "phpstan/phpstan": "^2.1",

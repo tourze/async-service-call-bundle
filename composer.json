@@ -1,5 +1,5 @@
 {
-  "name": "tourze/async-command-bundle",
+  "name": "tourze/async-service-call-bundle",
   "description": "异步执行服务方法",
   "type": "symfony-bundle",
   "license": "MIT",

@@ -8,7 +8,7 @@ use Psr\Log\LoggerInterface;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\BackedEnumNormalizer;
 use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
-use Tourze\Symfony\Async\Model\ObjectNormalizer;
+use Tourze\AsyncServiceCallBundle\Model\ObjectNormalizer;
 
 /**
  * 之所以特地搞这个序列化组件，是为了兼容复杂的对象入参

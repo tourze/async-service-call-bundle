@@ -41,7 +41,6 @@ class SerializerTest extends TestCase
 
         // 验证编码格式正确
         foreach ($encoded as $key => $value) {
-            $this->assertIsArray($value);
             $this->assertArrayHasKey(0, $value);
             $this->assertContains($value[0], ['string', 'integer', 'boolean', 'array']);
         }
@@ -68,8 +67,6 @@ class SerializerTest extends TestCase
     {
         $data = ['test' => 'value'];
         $encoded = $this->serializer->serialize($data, 'json');
-
-        $this->assertIsString($encoded);
         $this->assertJson($encoded);
         $this->assertEquals('{"test":"value"}', $encoded);
     }
@@ -78,8 +75,6 @@ class SerializerTest extends TestCase
     {
         $json = '{"test":"value"}';
         $decoded = $this->serializer->deserialize($json, 'array', 'json');
-
-        $this->assertIsArray($decoded);
         $this->assertEquals(['test' => 'value'], $decoded);
     }
 }

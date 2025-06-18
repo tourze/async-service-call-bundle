@@ -28,7 +28,7 @@ class Serializer
             new BackedEnumNormalizer(),
             new DateTimeNormalizer(),
         ];
-        if ($this->entityManager) {
+        if ($this->entityManager !== null) {
             $normalizers[] = new ObjectNormalizer($this->entityManager, $this->logger);
         }
 

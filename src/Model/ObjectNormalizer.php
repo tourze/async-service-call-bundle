@@ -58,7 +58,7 @@ class ObjectNormalizer extends \Symfony\Component\Serializer\Normalizer\ObjectNo
     protected function setAttributeValue(object $object, string $attribute, mixed $value, ?string $format = null, array $context = []): void
     {
         $property = ReflectionHelper::getReflectionProperty($object, $attribute);
-        if (!!$value && $property && $property->getType() instanceof \ReflectionNamedType) {
+        if ($value !== null && $value !== false && $value !== '' && $property !== null && $property->getType() instanceof \ReflectionNamedType) {
             $className = $property->getType()->getName();
             // 如果是一个实体类，我们额外处理
             if (EntityDetector::isEntityClass($className) && !is_object($value)) {

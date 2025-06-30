@@ -8,6 +8,7 @@ use Psr\Log\LoggerInterface;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\BackedEnumNormalizer;
 use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
+use Tourze\AsyncServiceCallBundle\Exception\InvalidParameterException;
 use Tourze\AsyncServiceCallBundle\Model\ObjectNormalizer;
 
 /**
@@ -51,7 +52,7 @@ class Serializer
         if (is_array($value)) {
             foreach ($value as $item) {
                 if (is_object($item)) {
-                    throw new \RuntimeException('使用异步注解时，参数请不要传入包含对象的数组');
+                    throw new InvalidParameterException('使用异步注解时，参数请不要传入包含对象的数组');
                 }
             }
         }

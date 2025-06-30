@@ -4,6 +4,7 @@ namespace Tourze\AsyncServiceCallBundle\Tests\Service;
 
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use Tourze\AsyncServiceCallBundle\Exception\InvalidParameterException;
 use Tourze\AsyncServiceCallBundle\Service\Serializer;
 
 class SerializerTest extends TestCase
@@ -14,16 +15,7 @@ class SerializerTest extends TestCase
     protected function setUp(): void
     {
         $this->logger = $this->createMock(LoggerInterface::class);
-        $this->serializer = $this->getMockBuilder(Serializer::class)
-            ->setConstructorArgs([$this->logger])
-            ->onlyMethods(['serialize', 'deserialize'])
-            ->getMock();
-
-        // 模拟序列化和反序列化方法
-        $this->serializer->method('serialize')
-            ->willReturn('{"test":"value"}');
-        $this->serializer->method('deserialize')
-            ->willReturn(['test' => 'value']);
+        $this->serializer = new Serializer($this->logger);
     }
 
     public function testEncodeDecodeParamsWithScalars(): void
@@ -56,25 +48,26 @@ class SerializerTest extends TestCase
             'objectArray' => [$object],
         ];
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(InvalidParameterException::class);
         $this->expectExceptionMessage('使用异步注解时，参数请不要传入包含对象的数组');
 
         $real = new Serializer($this->logger);
         $real->encodeParams($params);
     }
 
-    public function testSerializeMocked(): void
+    public function testSerializeWithDateTime(): void
     {
-        $data = ['test' => 'value'];
-        $encoded = $this->serializer->serialize($data, 'json');
+        $date = new \DateTime('2023-01-01 12:00:00');
+        $encoded = $this->serializer->serialize($date, 'json');
         $this->assertJson($encoded);
-        $this->assertEquals('{"test":"value"}', $encoded);
+        $this->assertStringContainsString('2023-01-01', $encoded);
     }
 
-    public function testDeserializeMocked(): void
+    public function testDeserializeWithDateTime(): void
     {
-        $json = '{"test":"value"}';
-        $decoded = $this->serializer->deserialize($json, 'array', 'json');
-        $this->assertEquals(['test' => 'value'], $decoded);
+        $json = '"2023-01-01T12:00:00+00:00"';
+        $decoded = $this->serializer->deserialize($json, \DateTime::class, 'json');
+        $this->assertInstanceOf(\DateTime::class, $decoded);
+        $this->assertEquals('2023-01-01 12:00:00', $decoded->format('Y-m-d H:i:s'));
     }
 }

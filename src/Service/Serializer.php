@@ -1,9 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tourze\AsyncServiceCallBundle\Service;
 
-use Doctrine\Common\Util\ClassUtils;
 use Doctrine\ORM\EntityManagerInterface;
+use Monolog\Attribute\WithMonologChannel;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\BackedEnumNormalizer;
@@ -15,6 +17,7 @@ use Tourze\AsyncServiceCallBundle\Model\ObjectNormalizer;
  * 之所以特地搞这个序列化组件，是为了兼容复杂的对象入参
  * 因为 Symfony 的序列化有自己的一套逻辑，所以要注意这样不要继承它
  */
+#[WithMonologChannel(channel: 'async_service_call')]
 class Serializer
 {
     private \Symfony\Component\Serializer\Serializer $serializer;
@@ -22,25 +25,30 @@ class Serializer
     public function __construct(
         private readonly LoggerInterface $logger,
         private readonly ?EntityManagerInterface $entityManager = null,
-    )
-    {
+    ) {
         $encoders = [new JsonEncoder()];
         $normalizers = [
             new BackedEnumNormalizer(),
             new DateTimeNormalizer(),
         ];
-        if ($this->entityManager !== null) {
+        if (null !== $this->entityManager) {
             $normalizers[] = new ObjectNormalizer($this->entityManager, $this->logger);
         }
 
         $this->serializer = new \Symfony\Component\Serializer\Serializer($normalizers, $encoders);
     }
 
+    /**
+     * @param array<string, mixed> $context
+     */
     public function serialize(mixed $data, string $format, array $context = []): string
     {
         return $this->serializer->serialize($data, $format, $context);
     }
 
+    /**
+     * @param array<string, mixed> $context
+     */
     public function deserialize(mixed $data, string $type, string $format, array $context = []): mixed
     {
         return $this->serializer->deserialize($data, $type, $format, $context);
@@ -61,6 +69,10 @@ class Serializer
     /**
      * 打包参数
      */
+    /**
+     * @param array<string, mixed> $params
+     * @return array<string, mixed>
+     */
     public function encodeParams(array $params): array
     {
         $encodeParams = [];
@@ -69,7 +81,7 @@ class Serializer
             if ($value instanceof \BackedEnum) {
                 $encodeParams[$key] = [
                     'enum',
-                    ClassUtils::getClass($value),
+                    get_class($value),
                     $value->value,
                 ];
                 continue;
@@ -81,7 +93,7 @@ class Serializer
                     // 把对象转为一个json字符串
                     $encodeParams[$key] = [
                         'object',
-                        ClassUtils::getClass($value),
+                        get_class($value),
                         $this->serialize($value, 'json'),
                     ];
                     break;
@@ -97,13 +109,17 @@ class Serializer
         return $encodeParams;
     }
 
+    /**
+     * @param array<string, mixed> $encodeParams
+     * @return array<string, mixed>
+     */
     public function decodeParams(array $encodeParams): array
     {
         $params = [];
         foreach ($encodeParams as $key => $value) {
-            if ($value[0] === 'enum') {
+            if ('enum' === $value[0]) {
                 $className = $value[1];
-                /** @var class-string<\BackedEnum> $className */
+                /* @var class-string<\BackedEnum> $className */
                 $params[$key] = $className::from($value[2]);
                 continue;
             }

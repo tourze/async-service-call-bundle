@@ -1,26 +1,30 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tourze\AsyncServiceCallBundle\MessageHandler;
 
+use Monolog\Attribute\WithMonologChannel;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\DelayStamp;
+use Tourze\AsyncServiceCallBundle\Exception\MethodNotFoundException;
 use Tourze\AsyncServiceCallBundle\Message\ServiceCallMessage;
 use Tourze\AsyncServiceCallBundle\Service\Serializer;
 
 #[AsMessageHandler]
-class ServiceCallHandler
+#[WithMonologChannel(channel: 'async_service_call')]
+readonly class ServiceCallHandler
 {
     public function __construct(
-        #[Autowire(service: 'service_container')] private readonly ContainerInterface $container,
-        private readonly Serializer $serializer,
-        private readonly LoggerInterface $logger,
-        private readonly MessageBusInterface $messageBus,
-    )
-    {
+        #[Autowire(service: 'service_container')] private ContainerInterface $container,
+        private Serializer $serializer,
+        private LoggerInterface $logger,
+        private MessageBusInterface $messageBus,
+    ) {
     }
 
     public function __invoke(ServiceCallMessage $message): void
@@ -31,7 +35,12 @@ class ServiceCallHandler
             $params = $this->serializer->decodeParams($message->getParams());
 
             $service = $this->container->get($message->getServiceId());
-            call_user_func_array([$service, $method], $params);
+            if (method_exists($service, $method)) {
+                $reflection = new \ReflectionMethod($service, $method);
+                $reflection->invokeArgs($service, $params);
+            } else {
+                throw new MethodNotFoundException(sprintf('Method %s does not exist on service %s', $method, $message->getServiceId()));
+            }
         } catch (\Throwable $exception) {
             $this->logger->error('异步调用服务方法失败:' . $exception->getMessage(), [
                 'exception' => $exception,
@@ -44,9 +53,11 @@ class ServiceCallHandler
                 $newMessage = clone $message;
                 $newMessage->setRetryCount($message->getRetryCount() - 1); // 减1次
 
-                $delaySecond = min($newMessage->getMaxRetryCount() - $newMessage->getRetryCount(), 60 * 60);
+                // 指数退避：重试次数越多，延迟越长
+                $attempt = $newMessage->getMaxRetryCount() - $newMessage->getRetryCount() + 1;
+                $delaySecond = min(pow(2, $attempt), 60 * 60);
                 $this->messageBus->dispatch($newMessage, [
-                    new DelayStamp($delaySecond * 1000),
+                    new DelayStamp((int) ($delaySecond * 1000)),
                 ]);
             }
         }

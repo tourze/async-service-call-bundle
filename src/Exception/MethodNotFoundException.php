@@ -4,6 +4,6 @@ declare(strict_types=1);
 
 namespace Tourze\AsyncServiceCallBundle\Exception;
 
-class InvalidParameterException extends \RuntimeException
+class MethodNotFoundException extends \RuntimeException
 {
 }

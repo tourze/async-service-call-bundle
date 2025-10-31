@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tourze\AsyncServiceCallBundle\Message;
 
 use Tourze\AsyncContracts\AsyncMessageInterface;
@@ -37,15 +39,21 @@ class ServiceCallMessage implements AsyncMessageInterface
     }
 
     /**
-     * @var array 参数
+     * @var array<string, mixed> 参数
      */
     private array $params = [];
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getParams(): array
     {
         return $this->params;
     }
 
+    /**
+     * @param array<string, mixed> $params
+     */
     public function setParams(array $params): void
     {
         $this->params = $params;

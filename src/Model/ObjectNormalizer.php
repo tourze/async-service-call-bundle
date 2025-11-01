@@ -10,6 +10,7 @@ use Symfony\Component\PropertyAccess\PropertyAccess;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 use Symfony\Component\PropertyInfo\Extractor\ReflectionExtractor;
 use Symfony\Component\PropertyInfo\PropertyTypeExtractorInterface;
+use Symfony\Component\Serializer\Exception\ExceptionInterface;
 use Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactoryInterface;
 use Symfony\Component\Serializer\NameConverter\NameConverterInterface;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
@@ -61,15 +62,17 @@ class ObjectNormalizer implements NormalizerInterface, DenormalizerInterface, Se
         ];
     }
 
-    /** @phpstan-ignore-next-line missingType.iterableValue */
     public function supportsNormalization(mixed $data, ?string $format = null, array $context = []): bool
     {
         return is_object($data);
     }
 
     /**
+     * @param mixed $object
+     * @param string|null $format
+     * @param array $context
      * @return array<string, mixed>|string|int|float|bool|\ArrayObject<int|string, mixed>|null
-     * @phpstan-ignore-next-line missingType.iterableValue
+     * @throws ExceptionInterface
      */
     public function normalize(mixed $object, ?string $format = null, array $context = []): array|string|int|float|bool|\ArrayObject|null
     {
@@ -83,13 +86,11 @@ class ObjectNormalizer implements NormalizerInterface, DenormalizerInterface, Se
         return $this->decoratedNormalizer->normalize($object, $format, $context);
     }
 
-    /** @phpstan-ignore-next-line missingType.iterableValue */
     public function supportsDenormalization(mixed $data, string $type, ?string $format = null, array $context = []): bool
     {
         return class_exists($type);
     }
 
-    /** @phpstan-ignore-next-line missingType.iterableValue */
     public function denormalize(mixed $data, string $type, ?string $format = null, array $context = []): mixed
     {
         // 处理实体类的反序列化

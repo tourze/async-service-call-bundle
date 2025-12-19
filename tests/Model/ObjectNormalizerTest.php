@@ -51,7 +51,6 @@ final class ObjectNormalizerTest extends TestCase
      */
     private function createStubEntityManager(): EntityManagerInterface
     {
-        /** @phpstan-ignore-next-line symplify.complexAnonymousClass */
         return new class implements EntityManagerInterface {
             public function find(string $className, mixed $id, LockMode|int|null $lockMode = null, ?int $lockVersion = null): ?object
             {
@@ -102,8 +101,6 @@ final class ObjectNormalizerTest extends TestCase
             {
                 throw new \RuntimeException('Not implemented in test stub');
             }
-
-            /** @phpstan-ignore method.childReturnType */
             public function getMetadataFactory(): ClassMetadataFactory
             {
                 throw new \RuntimeException('Not implemented in test stub');

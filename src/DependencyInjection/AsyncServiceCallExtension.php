@@ -6,7 +6,7 @@ namespace Tourze\AsyncServiceCallBundle\DependencyInjection;
 
 use Tourze\SymfonyDependencyServiceLoader\AutoExtension;
 
-class AsyncServiceCallExtension extends AutoExtension
+final class AsyncServiceCallExtension extends AutoExtension
 {
     protected function getConfigDir(): string
     {
